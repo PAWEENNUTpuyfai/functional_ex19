@@ -12,9 +12,8 @@ each part should be a function
 -}
 ----- pure part
 check :: Eq a => a -> a -> Bool
-check p1num guess
-    | guess == p1num    = True
-    | otherwise         = False
+check p1num guess = guess == p1num
+
 ----- impure part
 receivenumber :: IO Int
 receivenumber = do
@@ -31,7 +30,7 @@ player2state p1num = do
             putStrLn"you win"
             return()
         else do   
-            putStrLn "in correct"
+            putStrLn "Incorrect."
             player2state p1num
 ----- impure part           
 main :: IO ()
@@ -46,13 +45,9 @@ this number should also be entered by the first player
 
 can you reuse code from the previous version?
 -}
---- reuse check receivenumber ในการเช็คและรับเลข เพิ่ม limitGuess สำหรับบอกว่าค่ามากหรือน้อย
----โดยใส่ function นี่ลงไปเพิ่ม ใน player2state และเปลี่ยนให้ main ใช้ player2state'
-limitGuess :: Int -> Int -> IO ()
-limitGuess p1num guess
-    | p1num > guess     = putStrLn "too low"
-    | p1num < guess     = putStrLn "too high"
-
+--- reuse check receivenumber ในการเช็คและรับเลข เพิ่ม countAttempt สำหรับนับว่ามีการทายมาแล้วกี่ครั้ง
+---โดยใส่ function countAttempt นี่ลงไปเพิ่ม และเรียกใช้ player2stateง และให้มีการ recursive ที่countAttempt แทน
+-- เปลี่ยนให้ main รับค่าเลขของการจำกัดการนับเพิ่ม และเรียกใช้ countAttempt
 player2state' :: Int -> IO ()
 player2state' p1num = do
     putStrLn "player 2 guess number"
@@ -62,11 +57,20 @@ player2state' p1num = do
             putStrLn"you win"
             return()
         else do   
-            limitGuess p1num guess
-            putStrLn "in correct"
-            player2state' p1num
+            putStrLn "Incorrect."
 
+countAttempt :: (Eq t, Num t, Show t) => Int -> t -> IO ()
+countAttempt p1num attempt
+    |attempt == 0 = putStrLn "Out of guesses! You lose."
+    |otherwise = do
+        putStrLn $ "You have " ++ show attempt ++ " attempts left."
+        player2state' p1num 
+        countAttempt p1num (attempt -1)
+
+main' :: IO ()
 main' = do
     putStrLn "player 1 enter number"
     num <- receivenumber
-    player2state' num
+    putStrLn "Player 1 enter the number of attempts for Player 2"
+    attempt <- receivenumber
+    countAttempt num attempt
